@@ -76,12 +76,15 @@ class Tester(object):
             #self.insert_to_prediction_list(prediction)
             #prediction,predictionCount = self.most_common(self.predictionList)
             #if prediction>=0:
+            writtenVal = '-'
             if prediction>0: 
                 if self.classifier.medianDefects is not None and numDefects>=self.classifier.medianDefects[prediction-1]-1 and numDefects<=self.classifier.medianDefects[prediction-1]+1:
-                    #print modePrediction, predictionList
-                    print prediction
+                    #print prediction
+                    writtenVal = str(prediction)
                 elif self.classifier.medianDefects is None:
-                    print prediction
+                    #print prediction
+                    writtenVal = str(prediction)
+            self.write_on_image(imCopy, writtenVal)
             cv2.imshow(self.binaryWindowName, binaryIm)
             cv2.imshow(self.windowName,imCopy)
             k = cv2.waitKey(1)
@@ -109,3 +112,6 @@ class Tester(object):
             return False
         else:
             return True
+
+    def write_on_image(self, image, text):
+        cv2.putText(image, text, (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 4)
