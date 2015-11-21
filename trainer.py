@@ -8,7 +8,7 @@ from feature_extractor import FeatureExtractor
 from hand_tracker import HandTracker
 
 class Trainer(object):
-    def __init__(self, numGestures, numFramesPerGesture, minDescriptorsPerFrame, numWords, descType, parent):
+    def __init__(self, numGestures, numFramesPerGesture, minDescriptorsPerFrame, numWords, descType, kernel, numIter, parent):
         self.numGestures = numGestures
         self.numFramesPerGesture = numFramesPerGesture
         self.numWords = numWords
@@ -22,6 +22,8 @@ class Trainer(object):
         self.binaryWindowName = "Binary frames"
         self.handTracker = HandTracker(kernelSize=7, thresholdAngle=0.4, defectDistFromHull=30, parent=self)
         self.featureExtractor = FeatureExtractor(type=descType, parent=self)
+        self.kernel = kernel
+        self.numIter = numIter
         self.numDefects = None
         self.firstFrameList = []
         self.trainLabels = []
@@ -126,14 +128,14 @@ class Trainer(object):
                     sys.exit(0)
         cv2.destroyAllWindows()
 
-    def kmeans(self, numIters):
-        print "Running k-means clustering with {0} iterations...".format(numIters)
+    def kmeans(self):
+        print "Running k-means clustering with {0} iterations...".format(self.numIter)
         descriptors = self.desList[0]
         for des in self.desList:
             descriptors = np.vstack((descriptors, des))
         if descriptors.dtype != "float32":
             descriptors = np.float32(descriptors)
-        self.voc,variance = kmeans(descriptors, self.numWords, numIters)
+        self.voc,variance = kmeans(descriptors, self.numWords, self.numIter)
         return variance
 
     def bow(self):
@@ -144,12 +146,18 @@ class Trainer(object):
             for w in words:
                 self.trainData[i][w] += 1
 
-    def linear_svm(self):
-        print "Training linear SVM classifier..."
-        lin_clf = svm.LinearSVC()
-        valScore = self.leave_one_out_validate(lin_clf)
-        lin_clf.fit(self.trainData, self.trainLabels)
-        self.classifier = lin_clf
+    def svm(self):
+        print "Training SVM classifier with {0} kernel...".format(self.kernel)
+        if self.kernel == "linear":
+            clf = svm.LinearSVC()
+        elif self.kernel == "hist":
+            from sklearn.metrics.pairwise import additive_chi2_kernel
+            clf = svm.SVC(kernel=additive_chi2_kernel, decision_function_shape='ovr')
+        else:
+            clf = svm.SVC(kernel=self.kernel, decision_function_shape='ovr')
+        valScore = self.leave_one_out_validate(clf)
+        clf.fit(self.trainData, self.trainLabels)
+        self.classifier = clf
         self.classifier.voc = self.voc
         if self.numDefects is not None:
             self.classifier.medianDefects = np.median(self.numDefects, axis=1)

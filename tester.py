@@ -77,7 +77,7 @@ class Tester(object):
             #prediction,predictionCount = self.most_common(self.predictionList)
             #if prediction>=0:
             writtenVal = '-'
-            if prediction>0: 
+            if prediction>0.2: 
                 if self.classifier.medianDefects is not None and numDefects>=self.classifier.medianDefects[prediction-1]-1 and numDefects<=self.classifier.medianDefects[prediction-1]+1:
                     #print prediction
                     writtenVal = str(prediction)
