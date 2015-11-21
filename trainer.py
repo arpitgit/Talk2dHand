@@ -74,6 +74,9 @@ class Trainer(object):
         binaryIm = self.handTracker.get_binary_image(imhsv)
         cnt,hull,centroid,defects = self.handTracker.initialize_contour(binaryIm)
         self.numDefects = np.zeros((self.numGestures,self.numFramesPerGesture), "uint8")
+        cv2.namedWindow(self.binaryWindowName)
+        cv2.namedWindow(self.handWindowName)
+        cv2.namedWindow(self.windowName)
 
         #self.numFramesPerGestureList = [self.numFramesPerGesture] * self.numGestures
         gestureID = 1

@@ -22,6 +22,7 @@ class Tester(object):
         self.numSideFrames = 10
         self.prevFrameList = np.zeros((self.numSideFrames,self.parent.imHeight/self.numSideFrames,self.parent.imWidth/self.numSideFrames,3), "uint8")
         self.numPrevFrames = 0
+        self.predictionScoreThreshold = 0.5
 
     def initialize(self, clf):
         self.classifier = clf
@@ -43,6 +44,10 @@ class Tester(object):
         self.handTracker.colorProfiler.run(imhsv)
         binaryIm = self.handTracker.get_binary_image(imhsv)
         cnt,hull,centroid,defects = self.handTracker.initialize_contour(binaryIm)
+        cv2.namedWindow(self.binaryWindowName)
+        cv2.namedWindow(self.handWindowName)
+        cv2.namedWindow(self.windowName)
+        cv2.setMouseCallback(self.windowName, self.reinforce)
 
         while(vc.isOpened()):
             ret,im = vc.read()
@@ -81,15 +86,15 @@ class Tester(object):
             #if prediction>=0:
             writtenVal = '-'
             update = False
-            if prediction>0.2: 
-                if self.classifier.medianDefects is not None and numDefects>=self.classifier.medianDefects[prediction-1]-1 and numDefects<=self.classifier.medianDefects[prediction-1]+1:
+            if prediction > self.predictionScoreThreshold:
+                #if self.classifier.medianDefects is not None and numDefects>=self.classifier.medianDefects[prediction-1]-1 and numDefects<=self.classifier.medianDefects[prediction-1]+1:
+                #    #print prediction
+                #    writtenVal = str(prediction)
+                #    update = True
+                #elif self.classifier.medianDefects is None:
                     #print prediction
-                    writtenVal = str(prediction)
-                    update = True
-                elif self.classifier.medianDefects is None:
-                    #print prediction
-                    writtenVal = str(prediction)
-                    update = True
+                writtenVal = str(prediction)
+                update = True
             self.write_on_image(imCopy, writtenVal)
             cv2.imshow(self.binaryWindowName, binaryIm)
             imCopy = self.add_prev_frames_to_image(imCopy, update)
@@ -141,3 +146,9 @@ class Tester(object):
                 self.prevFrameList = np.append(self.prevFrameList, np.array([shrinkIm]), axis=0)
                 self.prevFrameList = self.prevFrameList[1:]
         return image
+
+    def reinforce(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            if x > self.parent.imWidth:
+                prevFrameID = np.floor(y*self.numSideFrames/self.parent.imHeight)
+                self.prevFrameList[prevFrameID] = cv2.cvtColor(self.prevFrameList[prevFrameID], cv2.COLOR_BGR2HSV)
