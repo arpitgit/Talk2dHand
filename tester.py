@@ -19,6 +19,9 @@ class Tester(object):
         self.predictionList = [-1]*numPredictions;
         self.handTracker = HandTracker(kernelSize=7, thresholdAngle=0.4, defectDistFromHull=30, parent=self)
         self.featureExtractor = FeatureExtractor(type=descType, parent=self)
+        self.numSideFrames = 10
+        self.prevFrameList = np.zeros((self.numSideFrames,self.parent.imHeight/self.numSideFrames,self.parent.imWidth/self.numSideFrames,3), "uint8")
+        self.numPrevFrames = 0
 
     def initialize(self, clf):
         self.classifier = clf
@@ -77,15 +80,19 @@ class Tester(object):
             #prediction,predictionCount = self.most_common(self.predictionList)
             #if prediction>=0:
             writtenVal = '-'
+            update = False
             if prediction>0.2: 
                 if self.classifier.medianDefects is not None and numDefects>=self.classifier.medianDefects[prediction-1]-1 and numDefects<=self.classifier.medianDefects[prediction-1]+1:
                     #print prediction
                     writtenVal = str(prediction)
+                    update = True
                 elif self.classifier.medianDefects is None:
                     #print prediction
                     writtenVal = str(prediction)
+                    update = True
             self.write_on_image(imCopy, writtenVal)
             cv2.imshow(self.binaryWindowName, binaryIm)
+            imCopy = self.add_prev_frames_to_image(imCopy, update)
             cv2.imshow(self.windowName,imCopy)
             k = cv2.waitKey(1)
             if k == 27: # space
@@ -114,4 +121,23 @@ class Tester(object):
             return True
 
     def write_on_image(self, image, text):
-        cv2.putText(image, text, (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 4)
+        cv2.putText(image, text, (self.parent.imWidth/20,self.parent.imHeight/4), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,255), 5)
+
+    def get_prev_frames_image(self):
+        image = self.prevFrameList[0]
+        for i in range(1,len(self.prevFrameList)):
+            image = np.append(image, self.prevFrameList[i], axis=0)
+        return image
+
+    def add_prev_frames_to_image(self, image, update=False):
+        shrinkIm = cv2.resize(image, None, fx=float(1)/self.numSideFrames, fy=float(1)/self.numSideFrames)
+        prevFramesIm = self.get_prev_frames_image()
+        image = np.append(image, prevFramesIm, axis=1)
+        if update:
+            if self.numPrevFrames < self.numSideFrames:
+                self.prevFrameList[self.numPrevFrames] = shrinkIm
+                self.numPrevFrames += 1
+            else:
+                self.prevFrameList = np.append(self.prevFrameList, np.array([shrinkIm]), axis=0)
+                self.prevFrameList = self.prevFrameList[1:]
+        return image
