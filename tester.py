@@ -33,7 +33,7 @@ class Tester(object):
             ret,im = vc.read()
             im = cv2.flip(im, 1)
             imhsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-            self.handTracker.colorProfiler.draw_color_windows(im)
+            self.handTracker.colorProfiler.draw_color_windows(im, imhsv)
             cv2.imshow(self.windowName, im)
             k = cv2.waitKey(1)
             if k == 32: # space
@@ -41,7 +41,7 @@ class Tester(object):
             elif k == 27:
                 sys.exit(0)
 
-        self.handTracker.colorProfiler.run(imhsv)
+        self.handTracker.colorProfiler.run()
         binaryIm = self.handTracker.get_binary_image(imhsv)
         cnt,hull,centroid,defects = self.handTracker.initialize_contour(binaryIm)
         cv2.namedWindow(self.binaryWindowName)

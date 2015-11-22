@@ -62,7 +62,7 @@ class Trainer(object):
             ret,im = vc.read()
             im = cv2.flip(im, 1)
             imhsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-            self.handTracker.colorProfiler.draw_color_windows(im)
+            self.handTracker.colorProfiler.draw_color_windows(im, imhsv)
             cv2.imshow(self.windowName, im)
             k = cv2.waitKey(1)
             if k == 32: # space
@@ -70,7 +70,7 @@ class Trainer(object):
             elif k == 27:
                 sys.exit(0)
 
-        self.handTracker.colorProfiler.run(imhsv)
+        self.handTracker.colorProfiler.run()
         binaryIm = self.handTracker.get_binary_image(imhsv)
         cnt,hull,centroid,defects = self.handTracker.initialize_contour(binaryIm)
         self.numDefects = np.zeros((self.numGestures,self.numFramesPerGesture), "uint8")
@@ -117,18 +117,25 @@ class Trainer(object):
                 else:
                     self.handTracker.draw_on_image(imCopy, cnt=False)
                 cv2.imshow(self.handWindowName, cropImage)
+            if not captureFlag:
+                text = "Press <space> for new gesture {0}".format(gestureID)
+            else:
+                text = "Getting gesture {0}".format(gestureID)
+            self.write_on_image(imCopy, text)
             cv2.imshow(self.binaryWindowName, binaryIm)
             cv2.imshow(self.windowName,imCopy)
             k = cv2.waitKey(1)
             if not captureFlag:
-                print "Press <space> for new gesture <{0}>!".format(gestureID)
+                #print "Press <space> for new gesture <{0}>!".format(gestureID)
                 if k == 32:
                     captureFlag = True
-                elif k == 27:
-                    sys.exit(0)
-            else:
-                if k == 27:
-                    sys.exit(0)
+                    continue
+            if k == 27:
+                sys.exit(0)
+            elif k == 99:
+                cv2.imwrite("TrainingImage.jpg", imCopy)
+                cv2.imwrite("BinaryImage.jpg", binaryIm)
+                cv2.imwrite("CroppedImage.jpg", cropImage)
         cv2.destroyAllWindows()
 
     def kmeans(self):
@@ -162,10 +169,10 @@ class Trainer(object):
         clf.fit(self.trainData, self.trainLabels)
         self.classifier = clf
         self.classifier.voc = self.voc
-        if self.numDefects is not None:
-            self.classifier.medianDefects = np.median(self.numDefects, axis=1)
-        else:
-            self.classifier.medianDefects = None
+#        if self.numDefects is not None:
+#            self.classifier.medianDefects = np.median(self.numDefects, axis=1)
+#        else:
+#            self.classifier.medianDefects = None
         return valScore
 
     def leave_one_out_validate(self, clf):
@@ -197,3 +204,6 @@ class Trainer(object):
             return False
         else:
             return True
+
+    def write_on_image(self, image, text):
+        cv2.putText(image, text, (self.parent.imWidth/20,self.parent.imHeight/10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)

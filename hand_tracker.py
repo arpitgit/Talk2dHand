@@ -15,8 +15,9 @@ class HandTracker(object):
         centers = self.add_centers(None, 60, 120)
         centers = self.add_centers(centers, 30, 60)
         centers = self.add_centers(centers, 45, 90)
-        hsvRange = np.array([2,160,160])
-        self.colorProfiler = ColorProfiler(centers=centers, windowSize=15, hsvRange=hsvRange, parent=self)
+        bgCenters = self.add_bg_centers(None, 120, 180)
+        hsvRange = np.array([2,160,256])
+        self.colorProfiler = ColorProfiler(centers=centers, bgCenters=bgCenters, windowSize=15, hsvRange=hsvRange, parent=self)
         self.xKalmanFilter = None
         self.yKalmanFilter = None
         self.wKalmanFilter = None
@@ -27,6 +28,12 @@ class HandTracker(object):
             return np.array([[int(self.imWidth/2),int(self.imHeight/2)],[int(self.imWidth/2+coordWidth),int(self.imHeight/2)],[int(self.imWidth/2),int(self.imHeight/2+coordHeight)],[int(self.imWidth/2-coordWidth),int(self.imHeight/2)],[int(self.imWidth/2),int(self.imHeight/2-coordHeight)],[int(self.imWidth/2-coordWidth/2),int(self.imHeight/2+coordHeight/2)],[int(self.imWidth/2+coordWidth/2),int(self.imHeight/2-coordHeight/2)],[int(self.imWidth/2+coordWidth/2),int(self.imHeight/2+coordHeight/2)],[int(self.imWidth/2-coordWidth/2),int(self.imHeight/2-coordHeight/2)]])
         else:
             return np.append(centers, np.array([[int(self.imWidth/2),int(self.imHeight/2)],[int(self.imWidth/2+coordWidth),int(self.imHeight/2)],[int(self.imWidth/2),int(self.imHeight/2+coordHeight)],[int(self.imWidth/2-coordWidth),int(self.imHeight/2)],[int(self.imWidth/2),int(self.imHeight/2-coordHeight)],[int(self.imWidth/2-coordWidth/2),int(self.imHeight/2+coordHeight/2)],[int(self.imWidth/2+coordWidth/2),int(self.imHeight/2-coordHeight/2)],[int(self.imWidth/2+coordWidth/2),int(self.imHeight/2+coordHeight/2)],[int(self.imWidth/2-coordWidth/2),int(self.imHeight/2-coordHeight/2)]]), axis=0)
+
+    def add_bg_centers(self, centers, coordWidth, coordHeight):
+        if centers is None:
+            return np.array([[int(self.imWidth/2-coordWidth),int(self.imHeight/2-coordHeight)],[int(self.imWidth/2-coordWidth),int(self.imHeight/2+coordHeight)],[int(self.imWidth/2+coordWidth),int(self.imHeight/2-coordHeight)],[int(self.imWidth/2+coordWidth),int(self.imHeight/2+coordHeight)]])
+        else:
+            return np.append(centers, np.array([[int(self.imWidth/2-coordWidth),int(self.imHeight/2-coordHeight)],[int(self.imWidth/2-coordWidth),int(self.imHeight/2+coordHeight)],[int(self.imWidth/2+coordWidth),int(self.imHeight/2-coordHeight)],[int(self.imWidth/2+coordWidth),int(self.imHeight/2+coordHeight)]]), axis=0)
 
     def get_binary_image(self, imhsv):
         imHeight,imWidth,channels = imhsv.shape

@@ -33,6 +33,7 @@ class Recognizer(object):
         return score
 
     def test_on_video(self, clf):
+        #print clf.coef_
         self.tester.initialize(clf)
         self.tester.test_on_video()
 
