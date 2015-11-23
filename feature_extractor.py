@@ -19,5 +19,20 @@ class FeatureExtractor(object):
         kp, des = self.model.compute(image, kp)
         return kp,des
 
+    def get_keypoints(self, image):
+        kp = self.model.detect(image, None)
+        return kp
+
+    def compute_descriptors(self, image, kp):
+        kp, des = self.model.compute(image, kp)
+        return kp,des
+
     def draw_keypoints(self, image, kp):
         cv2.drawKeypoints(image, kp, image, color=(0,255,0), flags=0)
+
+    def get_keypoints_in_contour(self, kps, cnt):
+        kpList = []
+        for kp in kps:
+            if cv2.pointPolygonTest(cnt,kp.pt,False) != -1:
+                kpList.append(kp)
+        return kpList

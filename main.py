@@ -70,7 +70,7 @@ def cmd_parser():
     parser.add_option("-w", "--words",      help="Number of visual words", default=100, type="int")
     parser.add_option("-d", "--desc",       help="Minimum number of descriptors per frame", default=100, type="int")
     parser.add_option("-t", "--type",       help="Descriptor type", action="store", type="string", default="surf")
-    parser.add_option("-k", "--kernel",     help="Kernel type", action="store", type="string", default="hist")
+    parser.add_option("-k", "--kernel",     help="Kernel type", action="store", type="string", default="linear")
     parser.add_option("-i", "--iter",       help="Number of iterations for k-means clustering", type="int", default=30)
     parser.add_option(      "--doc",        help="Print the docstring", action="store_true", default=False)
     parser.add_option(      "--notrain",    help="Whether to train the system", action="store_true", default=False)

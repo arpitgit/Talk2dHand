@@ -47,7 +47,15 @@ class HandTracker(object):
             finalBinIm = np.add(finalBinIm, binIm)
         closing = cv2.morphologyEx(finalBinIm, cv2.MORPH_CLOSE, self.kernel)
         median = cv2.medianBlur(closing, self.kernelSize)
-        return median
+        dilatedBinary = cv2.dilate(median, self.kernel, iterations = 1)
+        #medianClosing = cv2.morphologyEx(median, cv2.MORPH_CLOSE, self.kernel)
+        return dilatedBinary
+
+    def get_cropped_contour(self, cnt, cropPoints):
+        pt = np.array([[[cropPoints[0],cropPoints[1]]]], dtype="int32")
+        subXY = np.ones((cnt.shape[0],1,1), dtype="int32") * pt
+        retCnt = cnt - subXY
+        return retCnt
 
     def get_contour(self, binaryIm):
         #binaryIm = self.get_binary_image(imhsv)

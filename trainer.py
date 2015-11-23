@@ -93,7 +93,14 @@ class Trainer(object):
             if cnt is not None:
                 cropImage,cropPoints = self.handTracker.get_cropped_image_from_cnt(im, cnt, 0.05)
                 cropImageGray = self.handTracker.get_cropped_image_from_points(imgray, cropPoints)
-                kp,des = self.featureExtractor.get_keypoints_and_descriptors(cropImageGray)
+                #cv2.fillPoly(binaryIm, cnt, 255)
+                #cropImageBinary = self.handTracker.get_cropped_image_from_points(binaryIm, cropPoints)
+                #cropImageGray = self.apply_binary_mask(cropImageGray, cropImageBinary, 5)
+                #kp,des = self.featureExtractor.get_keypoints_and_descriptors(cropImageGray)
+                kp = self.featureExtractor.get_keypoints(cropImageGray)
+                cropCnt = self.handTracker.get_cropped_contour(cnt, cropPoints)
+                kp = self.featureExtractor.get_keypoints_in_contour(kp, cropCnt)
+                kp,des = self.featureExtractor.compute_descriptors(cropImageGray, kp)
                 if des is not None and des.shape[0] >= 0:
                     self.featureExtractor.draw_keypoints(cropImage, kp)
                 if captureFlag:
@@ -138,6 +145,12 @@ class Trainer(object):
                 cv2.imwrite("CroppedImage.jpg", cropImage)
         cv2.destroyAllWindows()
 
+    def apply_binary_mask(self, image, mask, kernelSize):
+        kernel = np.ones((kernelSize,kernelSize),np.uint8)
+        dilatedMask = cv2.dilate(mask,kernel,iterations=1)
+        maskedImage = cv2.bitwise_and(image, image, mask=dilatedMask)
+        return maskedImage
+
     def kmeans(self):
         print "Running k-means clustering with {0} iterations...".format(self.numIter)
         descriptors = self.desList[0]
@@ -155,6 +168,8 @@ class Trainer(object):
             words, distance = vq(self.desList[i], self.voc)
             for w in words:
                 self.trainData[i][w] += 1
+        normTrainData = np.linalg.norm(self.trainData, ord=2, axis=1) * np.ones((self.numWords,1))
+        self.trainData = np.divide(self.trainData, normTrainData.T)
 
     def svm(self):
         print "Training SVM classifier with {0} kernel...".format(self.kernel)
