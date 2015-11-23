@@ -103,6 +103,11 @@ class Trainer(object):
                 kp,des = self.featureExtractor.compute_descriptors(cropImageGray, kp)
                 if des is not None and des.shape[0] >= 0:
                     self.featureExtractor.draw_keypoints(cropImage, kp)
+                #x = int(cropPoints[0])
+                #y = int(cropPoints[1])
+                #w = int(cropPoints[2])
+                #h = int(cropPoints[3])
+                #cv2.rectangle(imCopy,(x,y),(x+w,y+h),(0,255,0),2)
                 if captureFlag:
                     if frameNum == 0:
                         self.firstFrameList.append(im)
