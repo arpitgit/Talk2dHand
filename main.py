@@ -177,7 +177,6 @@ if __name__ == "__main__":
 
         if not opts.notest:
             outputMode,outTestDirs = process_test_opts(opts)
-            print outputMode,outTestDirs
             if outputMode == "video": 
                 recognizer.test_on_video(clf)
             else:
