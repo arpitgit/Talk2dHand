@@ -6,6 +6,7 @@ class Recognizer(object):
     def __init__(self, vc, opts):
         self.vc = vc
         ret,im = vc.read()
+        self.numGestures = opts.num
         self.imHeight,self.imWidth,self.channels = im.shape
         self.trainer = Trainer(numGestures=opts.num, numFramesPerGesture=opts.frames, minDescriptorsPerFrame=opts.desc, numWords=opts.words, descType=opts.type, kernel=opts.kernel, numIter=opts.iter, parent=self)
         self.tester = Tester(numGestures=opts.num, minDescriptorsPerFrame=opts.desc, numWords=opts.words, descType=opts.type, numPredictions=7, parent=self)
@@ -20,6 +21,10 @@ class Recognizer(object):
     def train_from_descriptors(self, desList, trainLabels):
         self.trainer.desList = desList
         self.trainer.trainLabels = trainLabels
+        #numFramesPerGesture = trainLabels.count(1)
+        #self.trainer.desList = desList[:numFramesPerGesture*self.numGestures]
+        #self.trainer.trainLabels = trainLabels[:numFramesPerGesture*self.numGestures]
+
         variance = self.trainer.kmeans()
         self.trainer.bow()
         score = self.trainer.svm()
@@ -37,7 +42,12 @@ class Recognizer(object):
         self.tester.initialize(clf)
         self.tester.test_on_video()
     
-    def test_on_descriptors(self, clf, descList):
+    def test_on_descriptors(self, clf, descList, trueLabels):
+        #numFramesPerGesture = trueLabels.count(1)
+        #descList = descList[:numFramesPerGesture*self.numGestures]
+        #trueLabels = trueLabels[:numFramesPerGesture*self.numGestures]
         self.tester.initialize(clf)
         testLabels = self.tester.test_on_descriptors(descList)
-        return testLabels
+        matchList = [i for i, j in zip(trueLabels, testLabels) if i == j]
+        score = float(len(matchList))/len(trueLabels)
+        return score

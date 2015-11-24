@@ -184,7 +184,7 @@ class Trainer(object):
             from sklearn.metrics.pairwise import additive_chi2_kernel
             clf = svm.SVC(kernel=additive_chi2_kernel, decision_function_shape='ovr')
         else:
-            clf = svm.SVC(kernel=self.kernel, decision_function_shape='ovr')
+            clf = svm.SVC(kernel=self.kernel, decision_function_shape='ovr', degree=2, gamma=2)
         valScore = self.leave_one_out_validate(clf)
         clf.fit(self.trainData, self.trainLabels)
         self.classifier = clf

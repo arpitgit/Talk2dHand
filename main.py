@@ -181,9 +181,9 @@ if __name__ == "__main__":
                 recognizer.test_on_video(clf)
             else:
                 descList,trueLabels = get_relevant_objects(outputMode, outTestDirs, opts)
-                testLabels = recognizer.test_on_descriptors(clf, descList)
-                matchList = [i for i, j in zip(trueLabels, testLabels) if i == j]
-                score = float(len(matchList))/len(trueLabels)
+                score = recognizer.test_on_descriptors(clf, descList, trueLabels)
+                #matchList = [i for i, j in zip(trueLabels, testLabels) if i == j]
+                #score = float(len(matchList))/len(trueLabels)
                 print "Test score = {0}".format(score)
     except:
         vc.release()
