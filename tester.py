@@ -123,6 +123,28 @@ class Tester(object):
             if k == 27: # space
                 break
 
+    def test_on_descriptors(self, desList):
+        testLabels = []
+        for i,des in enumerate(desList): 
+            if des is not None and des.shape[0] >= self.minDescriptorsPerFrame:
+                words, distance = vq(des, self.classifier.voc)
+                testData = np.zeros(self.numWords, "float32")
+                for w in words:
+                    testData[w] += 1
+                normTestData = np.linalg.norm(testData, ord=2) * np.ones(self.numWords)
+                testData = np.divide(testData, normTestData)
+                prediction,score = self.predict(testData)
+                sortedScores = np.sort(score)
+                    #if max(score) > self.predictionScoreThreshold:
+                if sortedScores[-1]-sortedScores[-2] >= self.predictionScoreThreshold:
+                    pass
+                else:
+                    prediction = -1
+            else:
+                prediction = -1
+            testLabels.append(prediction)
+        return testLabels
+
     def predict(self, testData):
         prediction = self.classifier.predict(testData.reshape(1,-1))
         score = self.classifier.decision_function(testData.reshape(1,-1))

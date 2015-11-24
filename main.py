@@ -77,6 +77,7 @@ def cmd_parser():
     parser.add_option(      "--nocollect",  help="Whether to collect train descriptors", action="store_true", default=False)
     parser.add_option(      "--notest",     help="Whether to run the system in test mode", action="store_true", default=False)  
     parser.add_option(      "--traindir",   help="Training directory(ies)", action="store", type="string")
+    parser.add_option(      "--testdir",    help="Test directory", action="store", type="string")
     return parser.parse_args()
 
 def process_opts(opts):
@@ -102,6 +103,15 @@ def process_opts(opts):
             inTrainDirs = opts.traindir.split(',')
             inputMode = "images"
     return inputMode,inTrainDirs
+
+def process_test_opts(opts):
+    if opts.testdir is None:
+        outTestDirs = None
+        outputMode = "video"
+    else:
+        outTestDirs = opts.testdir.split(',')
+        outputMode = "descriptors"
+    return outputMode,outTestDirs
 
 def get_relevant_objects(inputMode, inTrainDirs, opts):
     if inputMode == "video":
@@ -166,8 +176,16 @@ if __name__ == "__main__":
                 clf = pickle.load(input)
 
         if not opts.notest:
-            recognizer.test_on_video(clf)
-
+            outputMode,outTestDirs = process_test_opts(opts)
+            print outputMode,outTestDirs
+            if outputMode == "video": 
+                recognizer.test_on_video(clf)
+            else:
+                descList,trueLabels = get_relevant_objects(outputMode, outTestDirs, opts)
+                testLabels = recognizer.test_on_descriptors(clf, descList)
+                matchList = [i for i, j in zip(trueLabels, testLabels) if i == j]
+                score = float(len(matchList))/len(trueLabels)
+                print "Test score = {0}".format(score)
     except:
         vc.release()
         import traceback

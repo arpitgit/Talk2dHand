@@ -36,4 +36,8 @@ class Recognizer(object):
         #print clf.coef_
         self.tester.initialize(clf)
         self.tester.test_on_video()
-
+    
+    def test_on_descriptors(self, clf, descList):
+        self.tester.initialize(clf)
+        testLabels = self.tester.test_on_descriptors(descList)
+        return testLabels
