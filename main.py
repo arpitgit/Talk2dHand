@@ -21,6 +21,9 @@ def get_traindir_path(dirName):
 def get_gesture_parentdir_path():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "GestureImages")
 
+def get_gesture_mask_parentdir_path():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "GestureMasks")
+
 def pickle_files(outTrainDir, trainer):
     outTrainDirPath = get_traindir_path(outTrainDir)
     if not os.path.exists(outTrainDirPath):
@@ -78,6 +81,7 @@ def cmd_parser():
     parser.add_option(      "--notest",     help="Whether to run the system in test mode", action="store_true", default=False)  
     parser.add_option(      "--traindir",   help="Training directory(ies)", action="store", type="string")
     parser.add_option(      "--testdir",    help="Test directory", action="store", type="string")
+    parser.add_option(      "--trainmask",  help="Type of masking for image data", default=0, type="int")
     return parser.parse_args()
 
 def process_opts(opts):
@@ -129,7 +133,11 @@ def get_relevant_objects(inputMode, inTrainDirs, opts):
         if opts.num != trueNumGestures:
             print "Taking number of gestures = {0}".format(trueNumGestures)
             opts.num = trueNumGestures
-        return gestureParentDirPath
+        if opts.trainmask != 0:
+            gestureMaskParentDirPath = get_gesture_mask_parentdir_path()
+        else:
+            gestureMaskParentDirPath = None
+        return gestureParentDirPath,gestureMaskParentDirPath,opts.trainmask
     else:
         return
             
@@ -158,9 +166,9 @@ if __name__ == "__main__":
                 outTrainDir = get_new_directory(opts.num, opts.type)
             clf = pickle_files(outTrainDir, recognizer.trainer)
         elif inputMode == "images":
-            parentDirPath = get_relevant_objects(inputMode, inTrainDirs, opts)
+            parentDirPath, maskParentDirPath, trainMask = get_relevant_objects(inputMode, inTrainDirs, opts)
             recognizer = Recognizer(vc=vc, opts=opts)
-            score = recognizer.train_from_images(inTrainDirs, parentDirPath)
+            score = recognizer.train_from_images(inTrainDirs, parentDirPath, trainMask, maskParentDirPath)
             print "Training score = {0}".format(score)
             outTrainDir = get_new_directory(opts.num, opts.type)
             clf = pickle_files(outTrainDir, recognizer.trainer)

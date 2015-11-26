@@ -28,7 +28,7 @@ class Trainer(object):
         self.firstFrameList = []
         self.trainLabels = []
 
-    def extract_descriptors_from_images(self, gestureDirList, parentDirPath):
+    def extract_descriptors_from_images(self, gestureDirList, parentDirPath, trainMask, maskParentDirPath):
         #self.numFramesPerGestureList = []
         for i,gestureDir in enumerate(gestureDirList):
             gestureDirPath = os.path.join(parentDirPath, gestureDir)
@@ -37,13 +37,36 @@ class Trainer(object):
                 for f in filenames:
                     if f.endswith(".jpg"):
                         imgList.append(os.path.join(dirpath, f))
+            if trainMask != 0:
+                maskList = []
+                maskDirPath = os.path.join(maskParentDirPath, gestureDir)
+                for dirpath, dirnames, filenames in os.walk("%s" % (maskDirPath), topdown=True, followlinks=True):
+                    for f in filenames:
+                        if f.endswith(".bmp"):
+                            maskList.append(os.path.join(dirpath, f))
+
             #self.numFramesPerGestureList.append(len(imgList))
             gestureID = i+1
             for j,f in enumerate(imgList):
                 cropImage = cv2.imread(f)
                 cropImage = cv2.flip(cropImage, 1)
                 cropImageGray = cv2.cvtColor(cropImage, cv2.COLOR_BGR2GRAY)
-                kp,des = self.featureExtractor.get_keypoints_and_descriptors(cropImageGray)
+                kp = self.featureExtractor.get_keypoints(cropImageGray)
+                if trainMask != 0:
+                    mask = cv2.imread(maskList[j])
+                    mask = cv2.flip(mask, 1)
+                    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                    if trainMask > 0:
+                        ret,binaryIm = cv2.threshold(mask,127,255,cv2.THRESH_BINARY)
+                    else:
+                        ret,binaryIm = cv2.threshold(mask,127,255,cv2.THRESH_BINARY_INV)
+                    #binaryIm = cv2.dilate(binaryIm, self.handTracker.kernel, iterations = 1)
+                    cnt,hull,centroid,defects = self.handTracker.get_contour(binaryIm, False)
+                    kp = self.featureExtractor.get_keypoints_in_contour(kp, cnt)
+                else:
+                    kp = self.featureExtractor.get_keypoints(cropImageGray)
+                kp,des = self.featureExtractor.compute_descriptors(cropImageGray, kp)
+                #kp,des = self.featureExtractor.get_keypoints_and_descriptors(cropImageGray)
                 if des is not None and des.shape[0] >= 0:
                     self.featureExtractor.draw_keypoints(cropImage, kp)
                     self.desList.append(des)

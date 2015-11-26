@@ -57,7 +57,7 @@ class HandTracker(object):
         retCnt = cnt - subXY
         return retCnt
 
-    def get_contour(self, binaryIm):
+    def get_contour(self, binaryIm, checkCentroid=True):
         #binaryIm = self.get_binary_image(imhsv)
         binIm = 1*binaryIm
         contours, hierarchy = cv2.findContours(binIm,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -65,7 +65,7 @@ class HandTracker(object):
         ci = -1
         for i,c in enumerate(contours):
             h = cv2.convexHull(c)
-            if cv2.pointPolygonTest(h, tuple(self.prevCentroid), False) == 1:
+            if (checkCentroid and cv2.pointPolygonTest(h, tuple(self.prevCentroid), False) == 1) or not checkCentroid:
                 #epsilon = 0.001*cv2.arcLength(c,True)
                 #c = cv2.approxPolyDP(c,epsilon,True)
                 area = cv2.contourArea(c)

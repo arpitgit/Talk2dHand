@@ -30,8 +30,8 @@ class Recognizer(object):
         score = self.trainer.svm()
         return score
 
-    def train_from_images(self, gestureDirList, parentDirPath):
-        self.trainer.extract_descriptors_from_images(gestureDirList, parentDirPath)
+    def train_from_images(self, gestureDirList, parentDirPath, trainMask, maskParentDirPath):
+        self.trainer.extract_descriptors_from_images(gestureDirList, parentDirPath, trainMask, maskParentDirPath)
         variance = self.trainer.kmeans()
         self.trainer.bow()
         score = self.trainer.svm()
