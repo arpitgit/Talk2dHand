@@ -60,7 +60,7 @@ class Trainer(object):
                         ret,binaryIm = cv2.threshold(mask,127,255,cv2.THRESH_BINARY)
                     else:
                         ret,binaryIm = cv2.threshold(mask,127,255,cv2.THRESH_BINARY_INV)
-                    #binaryIm = cv2.dilate(binaryIm, self.handTracker.kernel, iterations = 1)
+                    binaryIm = cv2.dilate(binaryIm, self.handTracker.kernel, iterations = 1)
                     cnt,hull,centroid,defects = self.handTracker.get_contour(binaryIm, False)
                     kp = self.featureExtractor.get_keypoints_in_contour(kp, cnt)
                 else:
